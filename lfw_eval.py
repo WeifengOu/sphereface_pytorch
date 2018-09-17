@@ -34,7 +34,7 @@ def KFold(n=6000, n_folds=10, shuffle=False):
     folds = []
     base = list(range(n))
     for i in range(n_folds):
-        test = base[i*n/n_folds:(i+1)*n/n_folds]
+        test = base[i*n//n_folds:(i+1)*n//n_folds]
         train = list(set(base)-set(test))
         folds.append([train,test])
     return folds
@@ -99,8 +99,8 @@ for i in range(6000):
         name1 = p[0]+'/'+p[0]+'_'+'{:04}.jpg'.format(int(p[1]))
         name2 = p[2]+'/'+p[2]+'_'+'{:04}.jpg'.format(int(p[3]))
 
-    img1 = alignment(cv2.imdecode(np.frombuffer(zfile.read(name1),np.uint8),1),landmark[name1])
-    img2 = alignment(cv2.imdecode(np.frombuffer(zfile.read(name2),np.uint8),1),landmark[name2])
+    img1 = alignment(cv2.imdecode(np.frombuffer(zfile.read('lfw/' + name1),np.uint8),1),landmark[name1])
+    img2 = alignment(cv2.imdecode(np.frombuffer(zfile.read('lfw/' + name2),np.uint8),1),landmark[name2])
 
     imglist = [img1,cv2.flip(img1,1),img2,cv2.flip(img2,1)]
     for i in range(len(imglist)):
@@ -120,9 +120,10 @@ accuracy = []
 thd = []
 folds = KFold(n=6000, n_folds=10, shuffle=False)
 thresholds = np.arange(-1.0, 1.0, 0.005)
-predicts = np.array(map(lambda line:line.strip('\n').split(), predicts))
+# predicts = np.array(map(lambda line:line.strip('\n').split(), predicts))
+predicts = list(map(lambda line:line.strip('\n').split(), predicts))
 for idx, (train, test) in enumerate(folds):
-    best_thresh = find_best_threshold(thresholds, predicts[train])
-    accuracy.append(eval_acc(best_thresh, predicts[test]))
+    best_thresh = find_best_threshold(thresholds, [predicts[i] for i in train])
+    accuracy.append(eval_acc(best_thresh, [predicts[i] for i in test]))
     thd.append(best_thresh)
 print('LFWACC={:.4f} std={:.4f} thd={:.4f}'.format(np.mean(accuracy), np.std(accuracy), np.mean(thd)))

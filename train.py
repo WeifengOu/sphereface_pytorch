@@ -18,7 +18,7 @@ import net_sphere
 
 parser = argparse.ArgumentParser(description='PyTorch sphereface')
 parser.add_argument('--net','-n', default='sphere20a', type=str)
-parser.add_argument('--dataset', default='../../dataset/face/casia/casia.zip', type=str)
+parser.add_argument('--dataset', default='../dataset/casia.zip', type=str)
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--bs', default=256, type=int, help='')
 args = parser.parse_args()
@@ -51,7 +51,7 @@ def dataset_load(name,filename,pindex,cacheobj,zfile):
     for i in range(5):
         src_pts.append([int(split[2*i+2]),int(split[2*i+3])])
 
-    data = np.frombuffer(zfile.read(nameinzip),np.uint8)
+    data = np.frombuffer(zfile.read('CASIA-WebFace/' + nameinzip),np.uint8)
     img = cv2.imdecode(data,1)
     img = alignment(img,src_pts)
 
@@ -98,7 +98,7 @@ def train(epoch,args):
     total = 0
     batch_idx = 0
     ds = ImageDataset(args.dataset,dataset_load,'data/casia_landmark.txt',name=args.net+':train',
-        bs=args.bs,shuffle=True,nthread=6,imagesize=128)
+        bs=args.bs,shuffle=True,nthread=1,imagesize=128)
     while True:
         img,label = ds.get()
         if img is None: break
@@ -128,8 +128,9 @@ def train(epoch,args):
 
 
 net = getattr(net_sphere,args.net)()
+# net = net_sphere.sphere20a()
 # net.load_state_dict(torch.load('sphere20a_0.pth'))
-net.cuda()
+if use_cuda: net.cuda()
 criterion = net_sphere.AngleLoss()
 
 
